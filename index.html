@@ -1,0 +1,997 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Monthly Money Planner</title>
+<style>
+:root{
+  --bg:#f3f0e8;--card:#fbfaf6;--text:#2b3430;--muted:#6f7a74;--line:#e2ddd0;--soft:#eeeadf;
+  --primary:#4f8a7b;--primary-d:#3f7366;--primary-t:rgba(79,138,123,.14);
+  --green:#5a9b6e;--red:#c4665a;--amber:#c99a4a;--blue:#5b8bb0;--pink:#b9708f;
+  --radius:16px;--shadow:0 1px 2px rgba(40,50,45,.05),0 8px 24px rgba(40,50,45,.06)
+}
+[data-theme="dark"]{
+  --bg:#171c1a;--card:#212826;--text:#e4eae6;--muted:#97a29c;--line:#313b38;--soft:#2a3330;
+  --primary:#6fb09f;--primary-d:#5a9a89;--primary-t:rgba(111,176,159,.16);
+  --green:#78b88a;--red:#d9857a;--amber:#d9b06a;--blue:#7ba8cb;--pink:#cf8fab;
+  --shadow:0 8px 24px rgba(0,0,0,.35)
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{font-family:system-ui,-apple-system,"Segoe UI",Roboto,"Noto Sans Thai",sans-serif;background:var(--bg);color:var(--text);font-size:14px;line-height:1.5;transition:background .2s}
+button,input,select{font:inherit;color:inherit}
+.topbar{position:sticky;top:0;z-index:30;background:var(--card);border-bottom:1px solid var(--line)}
+.topbar-in{max-width:1200px;margin:auto;padding:10px 18px;display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.brand{display:flex;align-items:center;gap:10px;font-weight:700;font-size:16px}
+.logo{width:36px;height:36px;border-radius:11px;background:var(--primary);display:flex;align-items:center;justify-content:center;font-size:18px}
+.monthnav{display:flex;align-items:center;gap:2px;margin:0 auto;background:var(--soft);padding:3px;border-radius:12px}
+.monthnav b{min-width:140px;text-align:center;cursor:pointer;font-weight:600}
+.icon-btn{width:34px;height:34px;border:none;border-radius:9px;background:transparent;cursor:pointer;font-size:18px}
+.icon-btn:hover{background:var(--line)}
+.actions{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+.select-sm{padding:6px 8px;border-radius:9px;border:1px solid var(--line);background:var(--card)}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:9px 15px;border-radius:10px;border:1px solid transparent;background:var(--primary);color:#fff;font-weight:600;cursor:pointer;font-size:13px;white-space:nowrap}
+[data-theme="dark"] .btn{color:#10201b}
+.btn:hover{background:var(--primary-d)}
+.btn.outline{background:transparent;border-color:var(--line);color:var(--text)}
+.btn.outline:hover{background:var(--soft)}
+.btn.soft{background:var(--primary-t);color:var(--primary-d)}
+[data-theme="dark"] .btn.soft{color:var(--primary)}
+.btn.danger{background:rgba(196,102,90,.13);color:var(--red)}
+.btn.danger:hover{background:rgba(196,102,90,.22)}
+.btn.sm{padding:5px 10px;font-size:12px;border-radius:8px}
+.btn.full{width:100%}
+main{max-width:1200px;margin:auto;padding:20px 18px 70px}
+.banner{background:rgba(201,154,74,.16);color:var(--text);border:1px solid rgba(201,154,74,.4);padding:11px 14px;border-radius:12px;margin-bottom:14px;font-size:13px}
+.banner.err{background:rgba(196,102,90,.14);border-color:rgba(196,102,90,.4)}
+.grid{display:grid;gap:16px}
+.g2{grid-template-columns:1fr 1fr}
+.g3{grid-template-columns:1.1fr .9fr}
+@media(max-width:920px){.g2,.g3{grid-template-columns:1fr}}
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);padding:18px}
+.card-h{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;gap:10px}
+.card-h h3{margin:0;font-size:15px;font-weight:650;display:flex;gap:10px;align-items:center}
+.ic{width:32px;height:32px;border-radius:10px;display:inline-flex;align-items:center;justify-content:center;background:var(--primary-t);font-size:15px}
+.hint{color:var(--muted);font-size:12px}
+.summary{display:grid;gap:16px;grid-template-columns:1.25fr 1fr 1fr;margin-bottom:20px}
+.hero{grid-row:span 2;border-radius:var(--radius);padding:22px;color:#fff;background:linear-gradient(145deg,#4f8a7b,#3d6f7a);box-shadow:var(--shadow);display:flex;flex-direction:column;justify-content:space-between;min-height:220px}
+[data-theme="dark"] .hero{background:linear-gradient(145deg,#2f5a50,#2b4a55)}
+.hero-top{display:flex;justify-content:space-between;align-items:center;font-weight:600}
+.pill{background:rgba(255,255,255,.2);padding:3px 10px;border-radius:20px;font-size:12px}
+.hero-val{font-size:36px;font-weight:800;margin:8px 0 2px}
+.hero-sub{opacity:.88;font-size:13px}
+.hero-bar{height:8px;background:rgba(255,255,255,.25);border-radius:8px;overflow:hidden;margin:16px 0}
+.hero-bar>div{height:100%;background:#fff;border-radius:8px}
+.hero-foot{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.hero-foot small{display:block;opacity:.85;font-size:11px;text-transform:uppercase;letter-spacing:.03em}
+.hero-foot b{font-size:16px}
+.stat{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);padding:16px;display:flex;gap:13px}
+.stat-ic{width:40px;height:40px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0}
+.stat-l{color:var(--muted);font-size:12px;font-weight:600}
+.stat-v{font-size:20px;font-weight:750;margin:2px 0}
+.stat-s{font-size:12px;color:var(--muted)}
+@media(max-width:920px){.summary{grid-template-columns:1fr 1fr}.hero{grid-column:span 2;grid-row:auto}}
+@media(max-width:520px){.summary{grid-template-columns:1fr}.hero{grid-column:auto}.monthnav{margin:0}}
+.tabs{display:inline-flex;background:var(--soft);border-radius:13px;padding:4px;gap:3px;margin-bottom:16px;flex-wrap:wrap}
+.tab{border:none;background:transparent;padding:8px 16px;border-radius:10px;cursor:pointer;font-weight:600;color:var(--muted)}
+.tab.active{background:var(--card);color:var(--text);box-shadow:0 1px 3px rgba(0,0,0,.1)}
+.panel{display:none}
+.panel.active{display:grid;gap:16px}
+.form-grid{display:grid;gap:10px;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));align-items:end;margin-bottom:14px}
+.lbl{display:block;font-size:12px;color:var(--muted);margin-bottom:4px;font-weight:600}
+.field{width:100%;padding:9px 11px;border:1px solid var(--line);border-radius:10px;background:var(--card);outline:none}
+.field:focus{border-color:var(--primary);box-shadow:0 0 0 3px var(--primary-t)}
+.table-wrap{overflow-x:auto;border:1px solid var(--line);border-radius:12px}
+table{width:100%;border-collapse:collapse}
+th,td{padding:9px 12px;text-align:left;font-size:13px;border-bottom:1px solid var(--line);white-space:nowrap}
+th{background:var(--soft);color:var(--muted);font-weight:600;font-size:12px}
+tr:last-child td{border-bottom:none}
+.cell{width:100px;padding:5px 8px;border:1px solid var(--line);border-radius:8px;background:var(--card)}
+input[type=checkbox]{width:17px;height:17px;cursor:pointer;accent-color:var(--primary)}
+.tag{padding:2px 9px;border-radius:20px;font-size:11px;font-weight:700}
+.t-Need{background:rgba(91,139,176,.18);color:var(--blue)}
+.t-Want{background:rgba(185,112,143,.18);color:var(--pink)}
+.t-Savings{background:rgba(90,155,110,.18);color:var(--green)}
+.t-Debt{background:rgba(201,154,74,.2);color:var(--amber)}
+.paid{text-decoration:line-through;color:var(--muted)}
+.list-row{display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px dashed var(--line)}
+.list-row:last-child{border-bottom:none}
+.bar{height:9px;background:var(--soft);border-radius:10px;overflow:hidden;margin-top:6px}
+.bar>div{height:100%;border-radius:10px;transition:width .3s}
+.row{display:flex;justify-content:space-between;gap:10px;font-size:13px}
+.sub-row{display:flex;justify-content:space-between;color:var(--muted);font-size:11.5px;margin-top:4px}
+.mb{margin-bottom:15px}
+.pos{color:var(--green)}.neg{color:var(--red)}.warn{color:var(--amber)}
+.donut-wrap{display:flex;gap:22px;align-items:center;flex-wrap:wrap}
+.donut{width:170px;height:170px;border-radius:50%;position:relative;flex-shrink:0}
+.donut::after{content:"";position:absolute;top:28px;left:28px;right:28px;bottom:28px;background:var(--card);border-radius:50%}
+.donut span{position:absolute;top:0;left:0;right:0;bottom:0;display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:1;font-size:12px;color:var(--muted)}
+.donut span b{font-size:16px;color:var(--text)}
+.legend{flex:1;min-width:180px}
+.legend div{display:flex;align-items:center;gap:8px;font-size:12.5px;margin:6px 0}
+.legend i{width:11px;height:11px;border-radius:4px;display:inline-block}
+.legend span{margin-left:auto;color:var(--muted)}
+.alert{padding:10px 13px;border-radius:11px;margin-bottom:8px;font-size:13px;display:flex;gap:9px}
+.alert.bad{background:rgba(196,102,90,.13);color:var(--red)}
+.alert.mid{background:rgba(201,154,74,.15);color:var(--amber)}
+.alert.good{background:rgba(90,155,110,.15);color:var(--green)}
+.empty{color:var(--muted);text-align:center;padding:20px 10px;font-size:13px}
+.empty .e-ic{font-size:26px;display:block;margin-bottom:6px}
+.modal-bg{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(15,20,18,.5);display:none;align-items:center;justify-content:center;z-index:100;padding:20px}
+.modal-bg.show{display:flex}
+.modal{background:var(--card);border-radius:18px;padding:22px;width:100%;max-width:460px}
+.modal h3{margin:0 0 10px}
+.modal-act{display:flex;justify-content:flex-end;gap:8px;margin-top:18px}
+#toasts{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);z-index:200;pointer-events:none}
+.toast{background:#2b3430;color:#fff;padding:10px 16px;border-radius:10px;font-size:13px;margin-top:8px;box-shadow:0 10px 30px rgba(0,0,0,.25)}
+.toast.bad{background:#b0564b}.toast.good{background:#3f7366}
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <div class="topbar-in">
+    <div class="brand"><div class="logo">💰</div>Money Planner</div>
+    <div class="monthnav">
+      <button type="button" class="icon-btn" id="prevM" title="Previous month">‹</button>
+      <b id="monthLabel" title="Go to current month">Loading…</b>
+      <button type="button" class="icon-btn" id="nextM" title="Next month">›</button>
+    </div>
+    <div class="actions">
+      <select class="select-sm" id="currency">
+        <option value="$">$ USD</option><option value="€">€ EUR</option><option value="£">£ GBP</option>
+        <option value="฿">฿ THB</option><option value="¥">¥ JPY</option><option value="₹">₹ INR</option>
+      </select>
+      <button type="button" class="btn outline sm" id="copyPrev">⧉ Copy last month</button>
+      <button type="button" class="btn outline sm" id="sample">✨ Sample</button>
+      <button type="button" class="btn outline sm" id="exportCsv">⬇ CSV</button>
+      <button type="button" class="btn outline sm" id="syncBtn" title="Sync across devices">☁ Sync</button>
+      <button type="button" class="btn outline sm" id="backup">💾 Backup</button>
+      <button type="button" class="btn outline sm" id="restore">📂 Restore</button>
+      <input type="file" id="restoreFile" accept=".json,application/json" style="display:none">
+      <button type="button" class="btn danger sm" id="resetM">Reset</button>
+      <button type="button" class="icon-btn" id="themeBtn" title="Dark mode">🌙</button>
+    </div>
+  </div>
+</header>
+
+<main>
+  <div id="jsCheck" class="banner err">
+    ⚠️ <b>The app has not started.</b> JavaScript is blocked where you are viewing this file.
+    Open <b>budget-planner.html</b> directly in Chrome, Edge, Safari or Firefox.
+  </div>
+  <div id="errBox"></div>
+  <div id="banner"></div>
+
+  <section class="summary" id="summary"></section>
+
+  <nav class="tabs">
+    <button type="button" class="tab active" data-tab="budget">📝 Budget</button>
+    <button type="button" class="tab" data-tab="overview">📊 Overview</button>
+    <button type="button" class="tab" data-tab="goals">🎯 Goals &amp; Savings</button>
+  </nav>
+
+  <section class="panel active" id="panel-budget">
+    <div class="grid g3">
+      <div class="card">
+        <div class="card-h"><h3><span class="ic">💵</span>Income</h3><span class="hint" id="incTotal"></span></div>
+        <form id="incomeForm" class="form-grid" novalidate>
+          <div><label class="lbl">Source</label><input class="field" id="incName" placeholder="e.g. Salary"></div>
+          <div><label class="lbl">Amount</label><input class="field" id="incAmt" inputmode="decimal" placeholder="0.00"></div>
+          <div><button class="btn full" type="submit">+ Add income</button></div>
+        </form>
+        <div id="incomeList"></div>
+      </div>
+      <div class="card">
+        <div class="card-h"><h3><span class="ic">🛒</span>Record spending</h3></div>
+        <p class="hint" style="margin-top:-6px">Spent money? Add it to a budget item and its "Actual" amount updates automatically.</p>
+        <form id="spendForm" class="form-grid" novalidate>
+          <div style="grid-column:1/-1"><label class="lbl">Budget item</label><select class="field" id="spendItem"></select></div>
+          <div><label class="lbl">Amount</label><input class="field" id="spendAmt" inputmode="decimal" placeholder="0.00"></div>
+          <div><button class="btn full" type="submit">Record</button></div>
+        </form>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-h"><h3><span class="ic">🧾</span>Expenses &amp; budget plan</h3><span class="hint">Edit Planned / Actual in the table</span></div>
+      <form id="expForm" class="form-grid" novalidate>
+        <div><label class="lbl">Item</label><input class="field" id="expName" placeholder="e.g. Rent"></div>
+        <div><label class="lbl">Category</label><select class="field" id="expCat"></select></div>
+        <div><label class="lbl">Type</label><select class="field" id="expType"><option>Need</option><option>Want</option><option>Savings</option><option>Debt</option></select></div>
+        <div><label class="lbl">Cost kind</label><select class="field" id="expFixed"><option value="1">Fixed</option><option value="0">Variable</option></select></div>
+        <div><label class="lbl">Planned</label><input class="field" id="expPlan" inputmode="decimal" placeholder="0.00"></div>
+        <div><label class="lbl">Actual (optional)</label><input class="field" id="expAct" inputmode="decimal" placeholder="0.00"></div>
+        <div><label class="lbl">Due day (optional)</label><input class="field" id="expDue" inputmode="numeric" placeholder="1-31"></div>
+        <div><button class="btn full" type="submit">+ Add expense</button></div>
+      </form>
+      <div id="expList"></div>
+    </div>
+  </section>
+
+  <section class="panel" id="panel-overview">
+    <div class="grid g2">
+      <div class="card"><div class="card-h"><h3><span class="ic">🔔</span>Alerts &amp; tips</h3></div><div id="alerts"></div></div>
+      <div class="card"><div class="card-h"><h3><span class="ic">🍩</span>Planned spending by category</h3></div>
+        <div class="donut-wrap"><div class="donut" id="donut"><span id="donutLabel"></span></div><div class="legend" id="legend"></div></div></div>
+    </div>
+    <div class="grid g2">
+      <div class="card"><div class="card-h"><h3><span class="ic">⚖️</span>50 / 30 / 20 rule</h3></div><div id="rule"></div></div>
+      <div class="card"><div class="card-h"><h3><span class="ic">📁</span>Budget vs actual</h3></div><div id="catBars"></div></div>
+    </div>
+    <div class="card"><div class="card-h"><h3><span class="ic">📅</span>Upcoming bills</h3></div><div id="bills"></div></div>
+  </section>
+
+  <section class="panel" id="panel-goals">
+    <div class="grid g2">
+      <div class="card">
+        <div class="card-h"><h3><span class="ic">🎯</span>Savings goals</h3></div>
+        <form id="goalForm" class="form-grid" novalidate>
+          <div><label class="lbl">Goal</label><input class="field" id="goalName" placeholder="e.g. Vacation"></div>
+          <div><label class="lbl">Target</label><input class="field" id="goalTarget" inputmode="decimal" placeholder="0.00"></div>
+          <div><label class="lbl">Saved so far</label><input class="field" id="goalSaved" inputmode="decimal" placeholder="0.00"></div>
+          <div><label class="lbl">Deadline</label><input class="field" id="goalDate" type="date"></div>
+          <div><button class="btn full" type="submit">+ Add goal</button></div>
+        </form>
+        <div id="goalList"></div>
+      </div>
+      <div class="card">
+        <div class="card-h"><h3><span class="ic">🛟</span>Emergency fund</h3></div>
+        <form id="efForm" class="form-grid" novalidate>
+          <div><label class="lbl">Current emergency savings</label><input class="field" id="efSaved" inputmode="decimal" placeholder="0.00"></div>
+          <div><label class="lbl">Target</label><select class="field" id="efMonths"><option value="3">3 months</option><option value="6">6 months</option><option value="12">12 months</option></select></div>
+          <div><button class="btn full" type="submit">Update</button></div>
+        </form>
+        <div id="efView"></div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<div class="modal-bg" id="modal">
+  <div class="modal">
+    <h3 id="mTitle"></h3>
+    <div id="mBody"></div>
+    <div class="modal-act"><button class="btn outline" id="mCancel" type="button">Cancel</button><button class="btn" id="mOk" type="button">OK</button></div>
+  </div>
+</div>
+<div id="toasts"></div>
+
+<script>
+window.onerror = function (msg, src, line) {
+  var b = document.getElementById('errBox');
+  if (b) b.innerHTML = '<div class="banner err">⚠️ <b>Error:</b> ' + String(msg).replace(/</g, '&lt;') + ' (line ' + line + ')</div>';
+};
+</script>
+<script>
+(function () {
+  'use strict';
+  var KEY = 'monthlyMoneyPlanner_v3';
+  var CATS = {'Housing':'Need','Utilities':'Need','Food':'Need','Transport':'Need','Insurance':'Need','Health':'Need','Education':'Need','Childcare':'Need',
+    'Debt Payment':'Debt','Savings':'Savings','Investment':'Savings','Entertainment':'Want','Shopping':'Want','Dining Out':'Want',
+    'Subscriptions':'Want','Travel':'Want','Personal':'Want','Gifts & Donations':'Want','Other':'Want'};
+  var FIXED = {'Housing':1,'Utilities':1,'Insurance':1,'Debt Payment':1,'Savings':1,'Investment':1,'Subscriptions':1,'Education':1,'Childcare':1};
+  var COLORS = ['#4f8a7b','#c99a4a','#5b8bb0','#b9708f','#c4665a','#8a7fb5','#6aa393','#d08b5b','#7a9a5a','#5f9aa8','#a07c9c','#8d8d6b','#c27a7a','#6f87a0','#b8a45a','#7fa89a','#a5805f','#9b8aa8','#78716c'];
+
+  /* ----- Safe storage (saves on this device via the browser) ----- */
+  var persistent = true, mem = {}, storage;
+  try { window.localStorage.setItem('__t', '1'); window.localStorage.removeItem('__t'); storage = window.localStorage; }
+  catch (e) {
+    persistent = false;
+    storage = { getItem: function (k) { return mem.hasOwnProperty(k) ? mem[k] : null; }, setItem: function (k, v) { mem[k] = String(v); } };
+  }
+
+  /* ----- Helpers ----- */
+  function $(id) { return document.getElementById(id); }
+  function uid() { return new Date().getTime().toString(36) + Math.random().toString(36).slice(2, 7); }
+  function esc(s) { return String(s == null ? '' : s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;'); }
+  function num(v) { var n = parseFloat(String(v == null ? '' : v).replace(/,/g, '').replace(/\s/g, '')); return isFinite(n) ? n : 0; }
+  function sum(arr, f) { var t = 0; for (var i = 0; i < arr.length; i++) t += num(f(arr[i])); return t; }
+  function pad(n) { return (n < 10 ? '0' : '') + n; }
+  function ymNow() { var d = new Date(); return d.getFullYear() + '-' + pad(d.getMonth() + 1); }
+  function ymShift(ym, delta) { var y = +ym.slice(0, 4), m = +ym.slice(5, 7) - 1 + delta; y += Math.floor(m / 12); m = ((m % 12) + 12) % 12; return y + '-' + pad(m + 1); }
+  var MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+  function ymLabel(ym) { return MONTHS[+ym.slice(5, 7) - 1] + ' ' + ym.slice(0, 4); }
+  function monthsBetween(a, b) { return (+b.slice(0, 4) - +a.slice(0, 4)) * 12 + (+b.slice(5, 7) - +a.slice(5, 7)); }
+  function money(n) { var s = Math.abs(n).toFixed(2).split('.'); s[0] = s[0].replace(/\B(?=(\d{3})+(?!\d))/g, ','); return s.join('.'); }
+  function fmt(n) { n = Number(n) || 0; return (n < 0 ? '-' : '') + store.currency + money(n); }
+  function findById(arr, id) { for (var i = 0; i < arr.length; i++) if (arr[i].id === id) return arr[i]; return null; }
+  function copy(o, extra) { var r = {}, k; for (k in o) r[k] = o[k]; for (k in extra) r[k] = extra[k]; return r; }
+  function up(el, attr) { while (el && el.getAttribute) { if (el.getAttribute(attr) !== null) return el; el = el.parentNode; } return null; }
+  function emptyState(icon, text) { return '<div class="empty"><span class="e-ic">' + icon + '</span>' + text + '</div>'; }
+  function setActive(el, on) { if (on) el.classList.add('active'); else el.classList.remove('active'); }
+
+  /* ----- State ----- */
+  function defaults() { return { currency:'$', theme:'light', months:{}, goals:[], ef:{ saved:0, months:6 } }; }
+  function normalize(s) {
+    var d = defaults();
+    if (!s || typeof s !== 'object') return d;
+    if (!s.months || typeof s.months !== 'object') s.months = d.months;
+    if (!(s.goals instanceof Array)) s.goals = d.goals;
+    if (!s.ef || typeof s.ef !== 'object') s.ef = d.ef;
+    if (!s.currency) s.currency = d.currency;
+    if (!s.theme) s.theme = d.theme;
+    return s;
+  }
+  function load() { try { return normalize(JSON.parse(storage.getItem(KEY))); } catch (e) { return defaults(); } }
+  var store = load();
+  var cur = ymNow();
+  var tab = 'budget';
+
+  function M() {
+    if (!store.months[cur]) store.months[cur] = { incomes:[], expenses:[] };
+    var m = store.months[cur];
+    if (!(m.incomes instanceof Array)) m.incomes = [];
+    if (!(m.expenses instanceof Array)) m.expenses = [];
+    m.expenses.forEach(function (x) { if (typeof x.fixed !== 'boolean') x.fixed = !!FIXED[x.cat]; });
+    return m;
+  }
+  function save() {
+    store.updatedAt = Date.now();
+    try { storage.setItem(KEY, JSON.stringify(store)); } catch (e) {}
+    if (window.plannerCloudPush) { try { window.plannerCloudPush(store); } catch (e) {} }
+    render();
+  }
+
+  /* ----- Toast & modal ----- */
+  function toast(msg, type) {
+    var t = document.createElement('div');
+    t.className = 'toast ' + (type || 'good');
+    t.textContent = msg;
+    $('toasts').appendChild(t);
+    setTimeout(function () { if (t.parentNode) t.parentNode.removeChild(t); }, 2600);
+  }
+  var modalOk = null;
+  function openModal(title, bodyHtml, okText, onOk, danger) {
+    $('mTitle').textContent = title;
+    $('mBody').innerHTML = bodyHtml;
+    $('mOk').textContent = okText || 'OK';
+    $('mOk').className = 'btn' + (danger ? ' danger' : '');
+    modalOk = onOk;
+    $('modal').classList.add('show');
+    var inp = $('mBody').querySelector('input');
+    if (inp) setTimeout(function () { inp.focus(); }, 50);
+  }
+  function closeModal() { $('modal').classList.remove('show'); modalOk = null; }
+  function confirmBox(msg, onYes) { openModal('Please confirm', '<p style="margin:0;color:var(--muted)">' + esc(msg) + '</p>', 'Yes, continue', function () { onYes(); }, true); }
+  $('mCancel').addEventListener('click', closeModal);
+  $('modal').addEventListener('click', function (e) { if (e.target === $('modal')) closeModal(); });
+  $('mOk').addEventListener('click', function () { var fn = modalOk; if (fn && fn() === false) return; closeModal(); });
+  $('mBody').addEventListener('keydown', function (e) { if (e.keyCode === 13) { e.preventDefault(); $('mOk').click(); } });
+
+  /* ----- Edit saved items ----- */
+  function catOptions(sel) {
+    var h = '', k, found = false;
+    for (k in CATS) { if (k === sel) found = true; h += '<option' + (k === sel ? ' selected' : '') + '>' + esc(k) + '</option>'; }
+    if (!found && sel) h = '<option selected>' + esc(sel) + '</option>' + h;
+    return h;
+  }
+  function typeOptions(sel) {
+    return ['Need', 'Want', 'Savings', 'Debt'].map(function (t) { return '<option' + (t === sel ? ' selected' : '') + '>' + t + '</option>'; }).join('');
+  }
+  function editItem(list, id) {
+    var o;
+    if (list === 'expenses') {
+      o = findById(M().expenses, id); if (!o) return;
+      openModal('Edit expense',
+        '<label class="lbl">Item</label><input class="field" id="eName" value="' + esc(o.name) + '">' +
+        '<div class="form-grid" style="margin:12px 0 0">' +
+        '<div><label class="lbl">Category</label><select class="field" id="eCat">' + catOptions(o.cat) + '</select></div>' +
+        '<div><label class="lbl">Type</label><select class="field" id="eType">' + typeOptions(o.type) + '</select></div>' +
+        '<div><label class="lbl">Cost kind</label><select class="field" id="eFixed"><option value="1"' + (o.fixed ? ' selected' : '') + '>Fixed</option><option value="0"' + (o.fixed ? '' : ' selected') + '>Variable</option></select></div>' +
+        '<div><label class="lbl">Due day</label><input class="field" id="eDue" inputmode="numeric" placeholder="1-31" value="' + (o.due || '') + '"></div>' +
+        '<div><label class="lbl">Planned</label><input class="field" id="ePlan" inputmode="decimal" value="' + num(o.planned) + '"></div>' +
+        '<div><label class="lbl">Actual</label><input class="field" id="eAct" inputmode="decimal" value="' + num(o.actual) + '"></div></div>',
+        'Save changes', function () {
+          var name = $('eName').value.replace(/^\s+|\s+$/g, ''), dueRaw = $('eDue').value.replace(/\s/g, ''), due = dueRaw ? Math.round(num(dueRaw)) : null;
+          if (!name) { toast('Please enter an item name', 'bad'); return false; }
+          if (due !== null && (due < 1 || due > 31)) { toast('Due day must be between 1 and 31', 'bad'); return false; }
+          o.name = name; o.cat = $('eCat').value; o.type = $('eType').value; o.fixed = $('eFixed').value === '1';
+          o.due = due; o.planned = Math.max(num($('ePlan').value), 0); o.actual = Math.max(num($('eAct').value), 0);
+          save(); toast('Expense updated ✓');
+        });
+      $('eCat').addEventListener('change', function () { $('eType').value = CATS[this.value] || 'Want'; $('eFixed').value = FIXED[this.value] ? '1' : '0'; });
+    } else if (list === 'incomes') {
+      o = findById(M().incomes, id); if (!o) return;
+      openModal('Edit income',
+        '<label class="lbl">Source</label><input class="field" id="eName" value="' + esc(o.name) + '">' +
+        '<label class="lbl" style="margin-top:10px">Amount</label><input class="field" id="eAmt" inputmode="decimal" value="' + num(o.amount) + '">',
+        'Save changes', function () {
+          var name = $('eName').value.replace(/^\s+|\s+$/g, ''), amt = num($('eAmt').value);
+          if (!name) { toast('Please enter a source', 'bad'); return false; }
+          if (amt <= 0) { toast('Please enter an amount greater than 0', 'bad'); return false; }
+          o.name = name; o.amount = amt; save(); toast('Income updated ✓');
+        });
+    } else if (list === 'goals') {
+      o = findById(store.goals, id); if (!o) return;
+      openModal('Edit goal',
+        '<label class="lbl">Goal</label><input class="field" id="eName" value="' + esc(o.name) + '">' +
+        '<div class="form-grid" style="margin:12px 0 0">' +
+        '<div><label class="lbl">Target</label><input class="field" id="eTarget" inputmode="decimal" value="' + num(o.target) + '"></div>' +
+        '<div><label class="lbl">Saved so far</label><input class="field" id="eSaved" inputmode="decimal" value="' + num(o.saved) + '"></div>' +
+        '<div style="grid-column:1/-1"><label class="lbl">Deadline</label><input class="field" id="eDate" type="date" value="' + esc(o.date) + '"></div></div>',
+        'Save changes', function () {
+          var name = $('eName').value.replace(/^\s+|\s+$/g, ''), target = num($('eTarget').value), date = $('eDate').value;
+          if (!name) { toast('Please enter a goal name', 'bad'); return false; }
+          if (target <= 0) { toast('Please enter a target amount', 'bad'); return false; }
+          if (!/^\d{4}-\d{2}/.test(date)) { toast('Please pick a deadline date', 'bad'); return false; }
+          o.name = name; o.target = target; o.saved = Math.max(num($('eSaved').value), 0); o.date = date.slice(0, 10);
+          save(); toast('Goal updated ✓');
+        });
+    }
+  }
+
+  /* ----- Controls ----- */
+  var opts = '';
+  for (var c in CATS) opts += '<option>' + esc(c) + '</option>';
+  $('expCat').innerHTML = opts;
+  $('expType').value = CATS[$('expCat').value];
+  $('expFixed').value = FIXED[$('expCat').value] ? '1' : '0';
+  $('expCat').addEventListener('change', function () { $('expType').value = CATS[this.value] || 'Want'; $('expFixed').value = FIXED[this.value] ? '1' : '0'; });
+  $('currency').value = store.currency;
+
+  $('prevM').addEventListener('click', function () { cur = ymShift(cur, -1); render(); });
+  $('nextM').addEventListener('click', function () { cur = ymShift(cur, 1); render(); });
+  $('monthLabel').addEventListener('click', function () { cur = ymNow(); render(); });
+  $('currency').addEventListener('change', function () { store.currency = this.value; save(); });
+  $('themeBtn').addEventListener('click', function () { store.theme = store.theme === 'dark' ? 'light' : 'dark'; save(); });
+
+  /* ----- Forms ----- */
+  $('incomeForm').addEventListener('submit', function (e) {
+    e.preventDefault();
+    var name = $('incName').value.replace(/^\s+|\s+$/g, ''), amt = num($('incAmt').value);
+    if (!name) { toast('Please enter an income source', 'bad'); $('incName').focus(); return; }
+    if (amt <= 0) { toast('Please enter an amount greater than 0', 'bad'); $('incAmt').focus(); return; }
+    M().incomes.push({ id:uid(), name:name, amount:amt });
+    $('incName').value = ''; $('incAmt').value = '';
+    save(); toast('Income added ✓'); $('incName').focus();
+  });
+
+  $('expForm').addEventListener('submit', function (e) {
+    e.preventDefault();
+    var name = $('expName').value.replace(/^\s+|\s+$/g, ''), planned = num($('expPlan').value), actual = num($('expAct').value);
+    var dueRaw = $('expDue').value.replace(/\s/g, ''), due = dueRaw ? Math.round(num(dueRaw)) : null;
+    if (!name) { toast('Please enter an item name', 'bad'); $('expName').focus(); return; }
+    if (planned <= 0 && actual <= 0) { toast('Please enter a planned amount', 'bad'); $('expPlan').focus(); return; }
+    if (due !== null && (due < 1 || due > 31)) { toast('Due day must be between 1 and 31', 'bad'); $('expDue').focus(); return; }
+    M().expenses.push({ id:uid(), name:name, cat:$('expCat').value, type:$('expType').value, planned:planned, actual:Math.max(actual, 0), due:due, paid:false, fixed:$('expFixed').value === '1' });
+    $('expName').value = ''; $('expPlan').value = ''; $('expAct').value = ''; $('expDue').value = '';
+    save(); toast('Expense added ✓'); $('expName').focus();
+  });
+
+  $('spendForm').addEventListener('submit', function (e) {
+    e.preventDefault();
+    var x = findById(M().expenses, $('spendItem').value), amt = num($('spendAmt').value);
+    if (!x) { toast('Add a budget item first', 'bad'); return; }
+    if (amt <= 0) { toast('Please enter an amount', 'bad'); $('spendAmt').focus(); return; }
+    x.actual = num(x.actual) + amt;
+    $('spendAmt').value = '';
+    save(); toast(fmt(amt) + ' recorded to ' + x.name, x.actual > x.planned ? 'bad' : 'good');
+  });
+
+  $('goalForm').addEventListener('submit', function (e) {
+    e.preventDefault();
+    var name = $('goalName').value.replace(/^\s+|\s+$/g, ''), target = num($('goalTarget').value), saved = num($('goalSaved').value), date = $('goalDate').value;
+    if (!name) { toast('Please enter a goal name', 'bad'); $('goalName').focus(); return; }
+    if (target <= 0) { toast('Please enter a target amount', 'bad'); $('goalTarget').focus(); return; }
+    if (!/^\d{4}-\d{2}/.test(date)) { toast('Please pick a deadline date', 'bad'); $('goalDate').focus(); return; }
+    store.goals.push({ id:uid(), name:name, target:target, saved:Math.max(saved, 0), date:date.slice(0, 10) });
+    $('goalName').value = ''; $('goalTarget').value = ''; $('goalSaved').value = ''; $('goalDate').value = '';
+    save(); toast('Goal added ✓');
+  });
+
+  $('efForm').addEventListener('submit', function (e) {
+    e.preventDefault();
+    if ($('efSaved').value.replace(/\s/g, '') !== '') store.ef.saved = Math.max(num($('efSaved').value), 0);
+    store.ef.months = +$('efMonths').value || 6;
+    $('efSaved').value = '';
+    save(); toast('Emergency fund updated ✓');
+  });
+
+  /* ----- Table edits ----- */
+  $('expList').addEventListener('change', function (e) {
+    var t = e.target, id = t.getAttribute('data-id'), f = t.getAttribute('data-f');
+    if (!id || !f) return;
+    var x = findById(M().expenses, id); if (!x) return;
+    if (f === 'paid') { x.paid = t.checked; if (x.paid && !num(x.actual)) x.actual = num(x.planned); }
+    else x[f] = Math.max(num(t.value), 0);
+    save();
+  });
+
+  /* ----- Clicks: tabs, delete, goal add ----- */
+  document.addEventListener('click', function (e) {
+    var el = up(e.target, 'data-tab');
+    if (el) { tab = el.getAttribute('data-tab'); render(); return; }
+
+    el = up(e.target, 'data-del');
+    if (el) {
+      var parts = el.getAttribute('data-del').split(':'), list = parts[0], id = parts[1];
+      if (list === 'goals') store.goals = store.goals.filter(function (g) { return g.id !== id; });
+      else M()[list] = M()[list].filter(function (x) { return x.id !== id; });
+      save(); toast('Deleted', 'bad'); return;
+    }
+
+    el = up(e.target, 'data-edit');
+    if (el) { var ep = el.getAttribute('data-edit').split(':'); editItem(ep[0], ep[1]); return; }
+
+    el = up(e.target, 'data-goal');
+    if (el) {
+      var g = findById(store.goals, el.getAttribute('data-goal')); if (!g) return;
+      openModal('Add to "' + g.name + '"',
+        '<label class="lbl">Amount (use minus to withdraw)</label><input class="field" id="mInput" inputmode="decimal" placeholder="0.00">',
+        'Save', function () {
+          var v = num($('mInput').value);
+          if (!v) { toast('Please enter an amount', 'bad'); return false; }
+          g.saved = Math.max(num(g.saved) + v, 0); save(); toast('Goal updated ✓');
+        });
+    }
+  });
+
+  /* ----- Header actions ----- */
+  $('copyPrev').addEventListener('click', function () {
+    var pk = ymShift(cur, -1), prev = store.months[pk];
+    if (!prev || (!(prev.incomes || []).length && !(prev.expenses || []).length)) { toast('No data found in ' + ymLabel(pk), 'bad'); return; }
+    var doCopy = function () {
+      store.months[cur] = {
+        incomes: (prev.incomes || []).map(function (i) { return copy(i, { id:uid() }); }),
+        expenses: (prev.expenses || []).map(function (x) { return copy(x, { id:uid(), actual:0, paid:false }); })
+      };
+      save(); toast('Copied plan from ' + ymLabel(pk));
+    };
+    var m = M();
+    if (m.incomes.length || m.expenses.length) confirmBox('Replace ' + ymLabel(cur) + ' with the plan from ' + ymLabel(pk) + '?', doCopy);
+    else doCopy();
+  });
+
+  $('resetM').addEventListener('click', function () {
+    confirmBox('Clear all income and expenses for ' + ymLabel(cur) + '?', function () { delete store.months[cur]; save(); toast('Month cleared', 'bad'); });
+  });
+
+  $('sample').addEventListener('click', function () {
+    var apply = function () {
+      store.months[cur] = {
+        incomes: [{ id:uid(), name:'Salary', amount:4200 }, { id:uid(), name:'Freelance', amount:600 }],
+        expenses: [
+          ['Rent','Housing','Need',1300,1300,1,true],['Electricity & Water','Utilities','Need',150,172,10,true],
+          ['Internet & Phone','Utilities','Need',80,80,15,false],['Groceries','Food','Need',450,390,null,false],
+          ['Fuel & Transit','Transport','Need',200,165,null,false],['Health Insurance','Insurance','Need',180,180,5,true],
+          ['Credit Card Payment','Debt Payment','Debt',300,300,20,false],['Emergency Fund','Savings','Savings',400,400,25,false],
+          ['Retirement Investment','Investment','Savings',300,300,25,false],['Restaurants','Dining Out','Want',250,310,null,false],
+          ['Streaming Services','Subscriptions','Want',35,35,12,true],['Clothing','Shopping','Want',150,90,null,false],
+          ['Movies & Hobbies','Entertainment','Want',120,60,null,false]
+        ].map(function (r) { return { id:uid(), name:r[0], cat:r[1], type:r[2], planned:r[3], actual:r[4], due:r[5], paid:r[6], fixed:!!FIXED[r[1]] }; })
+      };
+      if (!store.goals.length) {
+        var y = new Date().getFullYear();
+        store.goals = [{ id:uid(), name:'Vacation', target:3000, saved:800, date:(y + 1) + '-06-30' },
+                       { id:uid(), name:'New Laptop', target:1500, saved:300, date:(y + 1) + '-12-31' }];
+      }
+      store.ef = { saved:5000, months:6 };
+      tab = 'overview'; save(); toast('Sample data loaded ✓');
+    };
+    var m = M();
+    if (m.incomes.length || m.expenses.length) confirmBox('Replace this month\'s data with sample data?', apply);
+    else apply();
+  });
+
+  function download(name, text, type) {
+    try {
+      var a = document.createElement('a');
+      a.href = URL.createObjectURL(new Blob([text], { type:type }));
+      a.download = name;
+      document.body.appendChild(a); a.click(); document.body.removeChild(a);
+      return true;
+    } catch (err) { toast('Download blocked in this view', 'bad'); return false; }
+  }
+
+  $('exportCsv').addEventListener('click', function () {
+    var m = M(), q = function (s) { return '"' + String(s == null ? '' : s).replace(/"/g, '""') + '"'; };
+    var lines = ['Type,Name,Category,Kind,Cost,Due,Planned,Actual,Paid'];
+    m.incomes.forEach(function (i) { lines.push(['Income', q(i.name), '', '', '', '', i.amount, i.amount, ''].join(',')); });
+    m.expenses.forEach(function (x) { lines.push(['Expense', q(x.name), q(x.cat), x.type, x.fixed ? 'Fixed' : 'Variable', x.due || '', x.planned, x.actual, x.paid].join(',')); });
+    if (lines.length === 1) { toast('Nothing to export yet', 'bad'); return; }
+    if (download('budget-' + cur + '.csv', '\ufeff' + lines.join('\n'), 'text/csv;charset=utf-8')) toast('CSV downloaded ✓');
+  });
+
+  /* Backup / restore all data as a file on your device */
+  $('backup').addEventListener('click', function () {
+    var d = new Date();
+    if (download('money-planner-backup-' + d.getFullYear() + pad(d.getMonth() + 1) + pad(d.getDate()) + '.json', JSON.stringify(store, null, 2), 'application/json')) toast('Backup saved to your device ✓');
+  });
+  $('restore').addEventListener('click', function () { $('restoreFile').click(); });
+  $('restoreFile').addEventListener('change', function () {
+    var f = this.files && this.files[0], input = this;
+    if (!f) return;
+    var r = new FileReader();
+    r.onload = function () {
+      try {
+        var data = JSON.parse(r.result);
+        if (!data || typeof data !== 'object' || !data.months) throw new Error('bad');
+        confirmBox('Replace ALL current data with this backup?', function () {
+          store = normalize(data); $('currency').value = store.currency; save(); toast('Backup restored ✓');
+        });
+      } catch (err) { toast('That file is not a valid backup', 'bad'); }
+      input.value = '';
+    };
+    r.readAsText(f);
+  });
+
+  /* ----- Render ----- */
+  function render() {
+    try { draw(); }
+    catch (err) { $('errBox').innerHTML = '<div class="banner err">⚠️ <b>Error:</b> ' + esc(err.message) + '</div>'; }
+  }
+
+  function draw() {
+    document.documentElement.setAttribute('data-theme', store.theme);
+    $('themeBtn').textContent = store.theme === 'dark' ? '☀️' : '🌙';
+    $('monthLabel').textContent = ymLabel(cur);
+    $('banner').innerHTML = persistent ? '' : '<div class="banner">⚠️ <b>Saving is blocked here</b>, so data is lost when you close this page. Open the .html file directly in your browser, or use 💾 Backup to keep a copy.</div>';
+
+    var m = M(), incomes = m.incomes, expenses = m.expenses;
+    var income = sum(incomes, function (i) { return i.amount; });
+    var planned = sum(expenses, function (x) { return x.planned; });
+    var actual = sum(expenses, function (x) { return x.actual; });
+    var unassigned = income - planned, left = income - actual;
+    var byType = function (t) { return sum(expenses.filter(function (x) { return x.type === t; }), function (x) { return x.planned; }); };
+    var need = byType('Need'), want = byType('Want'), savings = byType('Savings'), debt = byType('Debt');
+    var saveRate = income ? savings / income * 100 : 0;
+
+    var now = ymNow(), today = new Date().getDate();
+    var dim = new Date(+cur.slice(0, 4), +cur.slice(5, 7), 0).getDate();
+    var isThis = cur === now;
+    var daysLeft = isThis ? dim - today + 1 : (cur > now ? dim : 0);
+    var daily = daysLeft ? Math.max(left, 0) / daysLeft : 0;
+    var unpaid = expenses.filter(function (x) { return x.due && !x.paid; }).length;
+    var spentPct = income ? Math.min(actual / income * 100, 100) : 0;
+
+    var stat = function (icon, bg, label, val, sub, cls) {
+      return '<div class="stat"><div class="stat-ic" style="background:' + bg + '">' + icon + '</div><div><div class="stat-l">' + label +
+        '</div><div class="stat-v ' + (cls || '') + '">' + val + '</div><div class="stat-s">' + sub + '</div></div></div>';
+    };
+    $('summary').innerHTML =
+      '<div class="hero"><div><div class="hero-top"><span>Money left this month</span><span class="pill">' + ymLabel(cur) + '</span></div>' +
+      '<div class="hero-val">' + fmt(left) + '</div><div class="hero-sub">' + fmt(income) + ' income − ' + fmt(actual) + ' spent</div></div>' +
+      '<div><div class="hero-bar"><div style="width:' + spentPct + '%"></div></div><div class="hero-foot">' +
+      '<div><small>Daily allowance</small><b>' + fmt(daily) + '</b></div><div><small>Days left</small><b>' + daysLeft + '</b></div><div><small>Unpaid bills</small><b>' + unpaid + '</b></div></div></div></div>' +
+      stat('💵', 'rgba(90,155,110,.18)', 'Total income', fmt(income), incomes.length + ' source(s)') +
+      stat('📋', 'rgba(91,139,176,.18)', 'Planned budget', fmt(planned), (income ? (planned / income * 100).toFixed(0) : 0) + '% of income') +
+      stat('🧩', 'rgba(201,154,74,.2)', 'Unassigned', fmt(unassigned),
+        (unassigned === 0 && income) ? 'Every unit has a job ✓' : unassigned > 0 ? 'Assign to savings or goals' : (income ? 'Over-planned!' : 'Add income first'),
+        unassigned < 0 ? 'neg' : unassigned > 0 ? 'warn' : 'pos') +
+      stat('🐷', 'rgba(138,127,181,.2)', 'Savings rate', saveRate.toFixed(1) + '%', 'Target: 20% or more', saveRate >= 20 ? 'pos' : saveRate >= 10 ? 'warn' : 'neg');
+
+    var tabs = document.querySelectorAll('.tab'), panels = document.querySelectorAll('.panel'), i;
+    for (i = 0; i < tabs.length; i++) setActive(tabs[i], tabs[i].getAttribute('data-tab') === tab);
+    for (i = 0; i < panels.length; i++) setActive(panels[i], panels[i].id === 'panel-' + tab);
+
+    $('incTotal').textContent = incomes.length ? 'Total: ' + fmt(income) : '';
+    $('incomeList').innerHTML = incomes.length ? incomes.map(function (x) {
+      return '<div class="list-row"><span>' + esc(x.name) + '</span><span style="display:flex;gap:10px;align-items:center"><b class="pos">' + fmt(x.amount) +
+        '</b><button type="button" class="btn soft sm" data-edit="incomes:' + x.id + '">✎</button><button type="button" class="btn danger sm" data-del="incomes:' + x.id + '">✕</button></span></div>';
+    }).join('') : emptyState('💵', 'No income yet. Add your salary or other sources above.');
+
+    var keep = $('spendItem').value;
+    $('spendItem').innerHTML = expenses.length ? expenses.map(function (x) {
+      return '<option value="' + x.id + '">' + esc(x.name) + ' (' + fmt(num(x.planned) - num(x.actual)) + ' left)</option>';
+    }).join('') : '<option value="">Add a budget item first</option>';
+    if (keep && findById(expenses, keep)) $('spendItem').value = keep;
+
+    var rowHtml = function (x) {
+      var diff = num(x.planned) - num(x.actual);
+      return '<tr><td><input type="checkbox" ' + (x.paid ? 'checked' : '') + ' data-id="' + x.id + '" data-f="paid"></td>' +
+        '<td class="' + (x.paid ? 'paid' : '') + '"><b>' + esc(x.name) + '</b></td><td>' + esc(x.cat) + '</td>' +
+        '<td><span class="tag t-' + esc(x.type) + '">' + esc(x.type) + '</span></td><td>' + (x.due ? 'Day ' + x.due : '—') + '</td>' +
+        '<td><input class="cell" inputmode="decimal" value="' + num(x.planned) + '" data-id="' + x.id + '" data-f="planned"></td>' +
+        '<td><input class="cell" inputmode="decimal" value="' + num(x.actual) + '" data-id="' + x.id + '" data-f="actual"></td>' +
+        '<td class="' + (diff < 0 ? 'neg' : 'pos') + '"><b>' + (diff < 0 ? fmt(-diff) + ' over' : fmt(diff)) + '</b></td>' +
+        '<td><button type="button" class="btn soft sm" data-edit="expenses:' + x.id + '">✎ Edit</button> ' +
+        '<button type="button" class="btn danger sm" data-del="expenses:' + x.id + '">✕</button></td></tr>';
+    };
+    var expSection = function (list, icon, title, desc, first) {
+      var p = sum(list, function (x) { return x.planned; }), a = sum(list, function (x) { return x.actual; });
+      return '<div style="margin-top:' + (first ? 0 : 24) + 'px"><div class="row" style="align-items:flex-end;margin-bottom:8px;flex-wrap:wrap">' +
+        '<div><b style="font-size:14px">' + icon + ' ' + title + '</b><div class="hint">' + desc + '</div></div>' +
+        '<span class="hint" style="text-align:right">Planned <b style="color:var(--text)">' + fmt(p) + '</b> · Actual <b style="color:var(--text)">' + fmt(a) + '</b></span></div>' +
+        (list.length ? '<div class="table-wrap"><table><thead><tr><th>Paid</th><th>Item</th><th>Category</th><th>Type</th><th>Due</th><th>Planned</th><th>Actual</th><th>Remaining</th><th></th></tr></thead><tbody>' +
+          list.map(rowHtml).join('') + '</tbody></table></div>' : emptyState(icon, 'Nothing here yet.')) + '</div>';
+    };
+    var fixedList = expenses.filter(function (x) { return x.fixed; });
+    var varList = expenses.filter(function (x) { return !x.fixed; });
+    $('expList').innerHTML = expenses.length
+      ? expSection(fixedList, '📌', 'Fixed costs', 'Same amount every month: rent, insurance, loan payments, subscriptions', true) +
+        expSection(varList, '🔀', 'Variable costs', 'Changes month to month: food, fuel, dining out, shopping', false)
+      : emptyState('🧾', 'No expenses yet. Add rent, food, bills, savings and more.');
+
+    var cats = {};
+    expenses.forEach(function (x) { if (!cats[x.cat]) cats[x.cat] = { p:0, a:0 }; cats[x.cat].p += num(x.planned); cats[x.cat].a += num(x.actual); });
+    var catNames = Object.keys(cats).sort(function (a, b) { return cats[b].p - cats[a].p; });
+
+    var acc = 0, segs = [];
+    catNames.forEach(function (c, i) { var s = acc; acc += planned ? cats[c].p / planned * 100 : 0; segs.push(COLORS[i % COLORS.length] + ' ' + s + '% ' + acc + '%'); });
+    $('donut').style.background = (segs.length && planned) ? 'conic-gradient(' + segs.join(',') + ')' : 'var(--soft)';
+    $('donutLabel').innerHTML = 'Planned<b>' + fmt(planned) + '</b>';
+    $('legend').innerHTML = catNames.length ? catNames.map(function (c, i) {
+      return '<div><i style="background:' + COLORS[i % COLORS.length] + '"></i>' + esc(c) + '<span>' + fmt(cats[c].p) + ' · ' + (planned ? (cats[c].p / planned * 100).toFixed(0) : 0) + '%</span></div>';
+    }).join('') : emptyState('🍩', 'No expenses yet');
+
+    $('catBars').innerHTML = catNames.length ? catNames.map(function (c) {
+      var p = cats[c].p, a = cats[c].a, pct = p ? a / p * 100 : (a ? 100 : 0);
+      var col = pct > 100 ? 'var(--red)' : pct > 85 ? 'var(--amber)' : 'var(--green)';
+      return '<div class="mb"><div class="row"><b>' + esc(c) + '</b><span>' + fmt(a) + ' / ' + fmt(p) + '</span></div>' +
+        '<div class="bar"><div style="width:' + Math.min(pct, 100) + '%;background:' + col + '"></div></div>' +
+        '<div class="sub-row"><span>' + pct.toFixed(0) + '% used</span><span class="' + (p - a < 0 ? 'neg' : '') + '">' + (p - a >= 0 ? fmt(p - a) + ' left' : fmt(a - p) + ' over') + '</span></div></div>';
+    }).join('') : emptyState('📁', 'Add expenses to track categories.');
+
+    var rules = [['Needs', need, 50, 'var(--blue)', false], ['Wants', want, 30, 'var(--pink)', false], ['Savings & Debt', savings + debt, 20, 'var(--green)', true]];
+    $('rule').innerHTML = income ? rules.map(function (r) {
+      var pct = r[1] / income * 100, ok = r[4] ? pct >= r[2] : pct <= r[2];
+      return '<div class="mb"><div class="row"><b>' + r[0] + '</b><span class="' + (ok ? 'pos' : 'neg') + '">' + pct.toFixed(1) + '% <span class="hint">(target ' + (r[4] ? '≥' : '≤') + r[2] + '%)</span></span></div>' +
+        '<div class="bar"><div style="width:' + Math.min(pct, 100) + '%;background:' + r[3] + '"></div></div>' +
+        '<div class="sub-row"><span>' + fmt(r[1]) + '</span><span>Ideal: ' + fmt(income * r[2] / 100) + '</span></div></div>';
+    }).join('') : emptyState('⚖️', 'Add income to check the 50/30/20 rule.');
+
+    var bills = expenses.filter(function (x) { return x.due; }).sort(function (a, b) { return a.due - b.due; });
+    $('bills').innerHTML = bills.length ? '<div class="table-wrap"><table><thead><tr><th>Due</th><th>Bill</th><th>Amount</th><th>Status</th></tr></thead><tbody>' +
+      bills.map(function (b) {
+        var st = b.paid ? '<span class="pos">✓ Paid</span>' : '<span class="hint">Pending</span>';
+        if (!b.paid && isThis) {
+          if (b.due < today) st = '<span class="neg">⚠ Overdue</span>';
+          else if (b.due - today <= 3) st = '<span class="warn">Due ' + (b.due === today ? 'today' : 'in ' + (b.due - today) + ' day(s)') + '</span>';
+        }
+        if (!b.paid && cur < now) st = '<span class="neg">Unpaid</span>';
+        return '<tr><td>Day ' + b.due + '</td><td class="' + (b.paid ? 'paid' : '') + '">' + esc(b.name) + '</td><td>' + fmt(b.planned) + '</td><td>' + st + '</td></tr>';
+      }).join('') + '</tbody></table></div>' : emptyState('📅', 'Add a "Due day" to expenses to track bills here.');
+
+    var goalMonthly = 0;
+    $('goalList').innerHTML = store.goals.length ? store.goals.map(function (g) {
+      var pct = num(g.target) ? Math.min(num(g.saved) / num(g.target) * 100, 100) : 0;
+      var months = Math.max(monthsBetween(now, String(g.date).slice(0, 7)), 1);
+      var needPm = Math.max(num(g.target) - num(g.saved), 0) / months;
+      goalMonthly += needPm;
+      return '<div class="mb"><div class="row"><b>' + esc(g.name) + '</b><span>' + fmt(g.saved) + ' / ' + fmt(g.target) + '</span></div>' +
+        '<div class="bar" style="height:11px"><div style="width:' + pct + '%;background:var(--primary)"></div></div>' +
+        '<div class="row" style="margin-top:7px;align-items:center"><span class="hint">' +
+        (pct >= 100 ? '🎉 Goal reached!' : 'Save <b style="color:var(--text)">' + fmt(needPm) + '/month</b> · ' + months + ' month(s) · by ' + esc(g.date)) +
+        '</span><span style="display:flex;gap:6px"><button type="button" class="btn soft sm" data-goal="' + g.id + '">+ Add</button><button type="button" class="btn soft sm" data-edit="goals:' + g.id + '">✎</button>' +
+        '<button type="button" class="btn danger sm" data-del="goals:' + g.id + '">✕</button></span></div></div>';
+    }).join('') : emptyState('🎯', 'No goals yet. Try "Vacation", "New car" or "House deposit".');
+
+    var efMonths = store.ef.months || 6, efTarget = need * efMonths, efSaved = num(store.ef.saved);
+    var efPct = efTarget ? Math.min(efSaved / efTarget * 100, 100) : 0;
+    $('efMonths').value = String(efMonths);
+    $('efView').innerHTML = need ?
+      '<div class="list-row"><span>Monthly essentials (Needs)</span><b>' + fmt(need) + '</b></div>' +
+      '<div class="list-row"><span>Target (' + efMonths + ' months)</span><b>' + fmt(efTarget) + '</b></div>' +
+      '<div class="list-row"><span>Currently saved</span><b>' + fmt(efSaved) + '</b></div>' +
+      '<div class="bar" style="height:14px;margin-top:12px"><div style="width:' + efPct + '%;background:' + (efPct >= 100 ? 'var(--green)' : 'var(--amber)') + '"></div></div>' +
+      '<p class="hint" style="margin:8px 0 0">' + (efPct >= 100 ? '✅ Fully funded. You are protected!' :
+        efPct.toFixed(0) + '% funded · covers ' + (efSaved / need).toFixed(1) + ' months · ' + fmt(efTarget - efSaved) + ' to go') + '</p>'
+      : emptyState('🛟', 'Add "Need" expenses to calculate your emergency fund target.');
+
+    var al = [];
+    if (!income) al.push(['mid', '👋', 'Start by adding your monthly income in the Budget tab.']);
+    if (income && left < 0) al.push(['bad', '🚨', 'You have spent ' + fmt(-left) + ' more than your income this month.']);
+    if (income && unassigned < 0) al.push(['bad', '📉', 'Your plan is ' + fmt(-unassigned) + ' over your income. Reduce some "Wants".']);
+    else if (income && unassigned > 0) al.push(['mid', '🧩', fmt(unassigned) + ' is not assigned yet. Consider moving it to savings or goals.']);
+    catNames.forEach(function (c) { if (cats[c].a > cats[c].p) al.push(['bad', '💸', 'Over budget in <b>' + esc(c) + '</b> by ' + fmt(cats[c].a - cats[c].p) + '.']); });
+    if (income && saveRate < 10) al.push(['bad', '🐷', 'Savings rate is only ' + saveRate.toFixed(1) + '%. Aim for at least 10-20%.']);
+    if (income && want / income > 0.3) al.push(['mid', '🛍️', 'Wants are ' + (want / income * 100).toFixed(0) + '% of income (recommended ≤30%).']);
+    if (income && debt / income > 0.36) al.push(['bad', '💳', 'Debt payments exceed 36% of income, which is a high debt load.']);
+    if (need && efPct < 100) al.push(['mid', '🛟', 'Emergency fund is ' + efPct.toFixed(0) + '% complete. Keep building it.']);
+    if (goalMonthly > 0 && goalMonthly > Math.max(unassigned, 0) + savings) al.push(['mid', '🎯', 'Your goals need ' + fmt(goalMonthly) + '/month, more than you currently set aside.']);
+    if (isThis) bills.forEach(function (b) { if (!b.paid && b.due < today) al.push(['bad', '⏰', 'Bill overdue: <b>' + esc(b.name) + '</b> (day ' + b.due + ').']); });
+    if (!al.length && income) al.push(['good', '🎉', 'Great job! Your budget is healthy and on track.']);
+    $('alerts').innerHTML = al.map(function (a) { return '<div class="alert ' + a[0] + '"><span>' + a[1] + '</span><span>' + a[2] + '</span></div>'; }).join('');
+  }
+
+  /* Bridge used by the cloud-sync module below */
+  window.plannerGetStore = function () { return store; };
+  window.plannerApplyRemote = function (data) {
+    store = normalize(data);
+    try { storage.setItem(KEY, JSON.stringify(store)); } catch (e) {}
+    $('currency').value = store.currency;
+    render();
+  };
+
+  render();
+  $('jsCheck').style.display = 'none';
+})();
+</script>
+
+<div class="modal-bg" id="syncModal">
+  <div class="modal">
+    <h3>☁ Cloud sync</h3>
+    <div id="syncBody"></div>
+    <div class="modal-act"><button class="btn outline" id="syncClose" type="button">Close</button></div>
+  </div>
+</div>
+
+<script>
+(function () {
+  var m = document.getElementById('syncModal');
+  document.getElementById('syncBtn').addEventListener('click', function () {
+    if (window.plannerSyncRender) window.plannerSyncRender();
+    else document.getElementById('syncBody').innerHTML = '<p class="hint" style="margin:0">Cloud sync could not load. It needs an internet connection and a normal browser (Chrome, Edge, Safari or Firefox). Your data is still saved on this device.</p>';
+    m.classList.add('show');
+  });
+  document.getElementById('syncClose').addEventListener('click', function () { m.classList.remove('show'); });
+  m.addEventListener('click', function (e) { if (e.target === m) m.classList.remove('show'); });
+})();
+</script>
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
+import { getAuth, onAuthStateChanged, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, sendPasswordResetEmail }
+  from "https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js";
+import { getFirestore, doc, getDoc, setDoc, onSnapshot }
+  from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyDsVz2kTS3q2LXYUQ_IaObroWuV1ahzL-k",
+  authDomain: "budgetplanner-7a839.firebaseapp.com",
+  projectId: "budgetplanner-7a839",
+  storageBucket: "budgetplanner-7a839.firebasestorage.app",
+  messagingSenderId: "794493792620",
+  appId: "1:794493792620:web:599aab1691b4dd563d0349"
+};
+
+const $ = (id) => document.getElementById(id);
+const esc = (s) => String(s == null ? '' : s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+const SYNCED_KEY = 'plannerSyncedUid';
+
+let auth, db, user = null, ref = null, unsub = null, timer = null;
+let status = 'off';        // off | syncing | ok | error
+let statusMsg = '';
+
+function setStatus(s, msg) {
+  status = s; statusMsg = msg || '';
+  const b = $('syncBtn');
+  if (!b) return;
+  b.textContent = s === 'ok' ? '☁ Synced ✓' : s === 'syncing' ? '☁ Syncing…' : s === 'error' ? '☁ Sync error' : '☁ Sync';
+  renderModal();
+}
+
+function friendly(e) {
+  const c = (e && e.code) || '';
+  if (c.includes('invalid-credential') || c.includes('wrong-password') || c.includes('user-not-found')) return 'Wrong email or password.';
+  if (c.includes('email-already-in-use')) return 'That email already has an account. Use Sign in.';
+  if (c.includes('weak-password')) return 'Password must be at least 6 characters.';
+  if (c.includes('invalid-email')) return 'Please enter a valid email address.';
+  if (c.includes('operation-not-allowed')) return 'Email/Password sign-in is not enabled in your Firebase console yet.';
+  if (c.includes('permission-denied')) return 'Firestore rules are blocking access. Update the rules in the Firebase console.';
+  if (c.includes('network')) return 'No internet connection. Your data is still saved on this device.';
+  if (c.includes('operation-not-supported')) return 'Sign-in is not supported in this view. Open the .html file in a normal browser.';
+  return (e && e.message) ? e.message : 'Something went wrong.';
+}
+
+function isEmpty(st) {
+  if (!st) return true;
+  const months = st.months || {};
+  const anyMonth = Object.keys(months).some(k => (months[k].incomes || []).length || (months[k].expenses || []).length);
+  return !anyMonth && !(st.goals || []).length;
+}
+
+async function pushNow() {
+  if (!user || !ref) return;
+  const st = window.plannerGetStore();
+  setStatus('syncing');
+  try {
+    await setDoc(ref, { json: JSON.stringify(st), updatedAt: st.updatedAt || Date.now() });
+    setStatus('ok');
+  } catch (e) { setStatus('error', friendly(e)); }
+}
+
+window.plannerCloudPush = function () {
+  if (!user) return;
+  clearTimeout(timer);
+  setStatus('syncing');
+  timer = setTimeout(pushNow, 800);
+};
+
+async function startSync(u) {
+  user = u;
+  ref = doc(db, 'planners', u.uid);
+  setStatus('syncing');
+  try {
+    const snap = await getDoc(ref);
+    const local = window.plannerGetStore();
+    let cloud = null;
+    if (snap.exists()) { try { cloud = JSON.parse(snap.data().json); } catch (e) { cloud = null; } }
+    const first = localStorage.getItem(SYNCED_KEY) !== u.uid;
+
+    if (!cloud) {
+      await pushNow();
+    } else if (isEmpty(local)) {
+      window.plannerApplyRemote(cloud);
+    } else if (first && !isEmpty(cloud)) {
+      const useCloud = confirm('Your cloud account already has data, and this device has data too.\n\nOK = replace this device with the cloud data\nCancel = replace the cloud with this device\'s data');
+      if (useCloud) window.plannerApplyRemote(cloud);
+      else { local.updatedAt = Date.now(); await pushNow(); }
+    } else if ((cloud.updatedAt || 0) > (local.updatedAt || 0)) {
+      window.plannerApplyRemote(cloud);
+    } else if ((local.updatedAt || 0) > (cloud.updatedAt || 0)) {
+      await pushNow();
+    }
+    try { localStorage.setItem(SYNCED_KEY, u.uid); } catch (e) {}
+
+    unsub = onSnapshot(ref, (s) => {
+      if (s.metadata.hasPendingWrites || !s.exists()) return;
+      const d = s.data();
+      const mine = window.plannerGetStore();
+      if ((d.updatedAt || 0) > (mine.updatedAt || 0)) {
+        try { window.plannerApplyRemote(JSON.parse(d.json)); } catch (e) {}
+      }
+      setStatus('ok');
+    }, (e) => setStatus('error', friendly(e)));
+    setStatus('ok');
+  } catch (e) { setStatus('error', friendly(e)); }
+}
+
+function stopSync() {
+  if (unsub) { unsub(); unsub = null; }
+  clearTimeout(timer);
+  user = null; ref = null;
+  setStatus('off');
+}
+
+function renderModal() {
+  const body = $('syncBody');
+  if (!body) return;
+  if (!auth) {
+    body.innerHTML = '<p class="hint" style="margin:0">Cloud sync could not load. Check your internet connection, and open this file in a normal browser (Chrome, Edge, Safari or Firefox).</p>';
+    return;
+  }
+  if (user) {
+    const color = status === 'error' ? 'var(--red)' : status === 'ok' ? 'var(--green)' : 'var(--muted)';
+    body.innerHTML =
+      '<p style="margin:0 0 4px">Signed in as <b>' + esc(user.email) + '</b></p>' +
+      '<p style="margin:0 0 14px;color:' + color + '">' +
+        (status === 'ok' ? '✓ Up to date. Changes sync automatically across your devices.' :
+         status === 'syncing' ? 'Syncing…' :
+         status === 'error' ? '⚠ ' + esc(statusMsg) : '') + '</p>' +
+      '<div style="display:flex;gap:8px;flex-wrap:wrap">' +
+      '<button class="btn" type="button" id="syncNow">Sync now</button>' +
+      '<button class="btn danger" type="button" id="syncOut">Sign out</button></div>' +
+      '<p class="hint" style="margin:12px 0 0">Your data always stays saved on this device too, so the app works offline.</p>';
+    $('syncNow').onclick = pushNow;
+    $('syncOut').onclick = async () => { try { await signOut(auth); } catch (e) {} };
+  } else {
+    body.innerHTML =
+      '<p class="hint" style="margin:0 0 12px">Sign in with the same email on each device to keep your budget in sync. New here? Choose Create account.</p>' +
+      '<label class="lbl">Email</label><input class="field" id="syEmail" type="email" autocomplete="email" placeholder="you@example.com">' +
+      '<label class="lbl" style="margin-top:10px">Password</label><input class="field" id="syPass" type="password" autocomplete="current-password" placeholder="At least 6 characters">' +
+      '<div id="syErr" style="color:var(--red);font-size:12.5px;min-height:18px;margin-top:8px">' + esc(statusMsg) + '</div>' +
+      '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:6px">' +
+      '<button class="btn" type="button" id="syIn">Sign in</button>' +
+      '<button class="btn soft" type="button" id="syUp">Create account</button>' +
+      '<button class="btn outline" type="button" id="syReset">Forgot password</button></div>';
+    const creds = () => ({ e: $('syEmail').value.trim(), p: $('syPass').value });
+    const run = async (fn, okMsg) => {
+      const { e, p } = creds();
+      if (!e) { $('syErr').textContent = 'Please enter your email.'; return; }
+      try { $('syErr').textContent = ''; await fn(e, p); if (okMsg) { $('syErr').style.color = 'var(--green)'; $('syErr').textContent = okMsg; } }
+      catch (err) { $('syErr').style.color = 'var(--red)'; $('syErr').textContent = friendly(err); }
+    };
+    $('syIn').onclick = () => run((e, p) => signInWithEmailAndPassword(auth, e, p));
+    $('syUp').onclick = () => run((e, p) => createUserWithEmailAndPassword(auth, e, p));
+    $('syReset').onclick = () => run((e) => sendPasswordResetEmail(auth, e), 'Password reset email sent.');
+    $('syPass').onkeydown = (ev) => { if (ev.key === 'Enter') $('syIn').click(); };
+  }
+}
+
+window.plannerSyncRender = () => { if (status !== 'error') statusMsg = ''; renderModal(); };
+
+try {
+  const app = initializeApp(firebaseConfig);
+  auth = getAuth(app);
+  db = getFirestore(app);
+  onAuthStateChanged(auth, (u) => {
+    if (u) { statusMsg = ''; startSync(u); $('syncModal').classList.remove('show'); }
+    else stopSync();
+  });
+} catch (e) { auth = null; setStatus('error', friendly(e)); }
+renderModal();
+</script>
+</body>
+</html>
